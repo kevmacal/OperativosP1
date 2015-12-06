@@ -84,5 +84,42 @@ int main(int argc, char** argv) {
 
 void *clientHandler(void *socket_desc)
 {
-    
+    //Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    int read_size;
+    char *message , client_message[2000];
+    int i;
+    char str[20];
+     
+    i=0;
+    //Send some messages to the client
+    message = "Agregando el manejador de mensajes\n";
+    write(sock , message , strlen(message));
+     
+    //Receive a message from client
+    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
+    {
+        //end of string marker
+        client_message[read_size] = '\0';
+
+        //Send the message back to client
+        sprintf(str,"Mensaje numero: %d\n",i);                
+
+        write(sock , str , 20);
+        //clear the message buffer
+        memset(client_message, 0, 2000);
+        i++;
+    }
+     
+    if(read_size == 0)
+    {
+        printf("Client disconnected");
+        fflush(stdout);
+    }
+    else if(read_size == -1)
+    {
+        perror("recv failed");
+    }
+         
+    return 0;
 } 

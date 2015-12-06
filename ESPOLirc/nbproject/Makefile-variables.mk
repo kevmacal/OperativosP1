@@ -7,21 +7,21 @@ CND_BASEDIR=`pwd`
 CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
-CND_PLATFORM_Debug=GNU-Linux
-CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux
+CND_PLATFORM_Debug=GNU-Linux-x86
+CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
 CND_ARTIFACT_NAME_Debug=espolirc
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/espolirc
-CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/espolirc
+CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Debug=espolirc.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/espolirc.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/espolirc.tar
 # Release configuration
-CND_PLATFORM_Release=GNU-Linux
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
+CND_PLATFORM_Release=GNU-Linux-x86
+CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
 CND_ARTIFACT_NAME_Release=espolirc
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/espolirc
-CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/espolirc
+CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=espolirc.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/espolirc.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/espolirc.tar
 #
 # include compiler specific variables
 #
