@@ -18,6 +18,8 @@
 #include <string.h>
 #include <pthread.h>
 
+#include "ClientIRC.h"
+
 /*
 Tutoriales
 http://www.tutorialspoint.com/unix_sockets/socket_server_example.htm
@@ -25,13 +27,16 @@ http://www.tutorialspoint.com/unix_sockets/socket_server_example.htm
 
 void *clientHandler(void *);
 
+
+ClientIRC *ClientConected[10];
+int conexiones;
+pthread_t threads[10];
+
 int main(int argc, char** argv) {
     
-    pthread_t thread1;
     int server_sockfd,portNo,server_len,client_sock,c;
     int rc;
-    struct sockaddr_in server_address,client_address;    
-    int conexiones;
+    struct sockaddr_in server_address,client_address;
     
     //Launch a new socket.
     server_sockfd = socket(AF_INET, SOCK_STREAM, 0); //Like socket()
@@ -72,11 +77,17 @@ int main(int argc, char** argv) {
         conexiones++;
         printf("\nConnection %d",conexiones);
          
-        if( pthread_create( &thread1 , NULL ,  clientHandler , (void*) &client_sock) < 0)
+        if( pthread_create( &threads[conexiones-1] , NULL ,  clientHandler , (void*) &client_sock) < 0)
         {
             perror("could not create thread");
             return (EXIT_FAILURE);
-        }        
+        }
+        /*Creating client with an independent connection*/
+        if(conexiones<=10){
+            ClientConected[conexiones-1]=newClientIRC(conexiones-1);
+        }else{
+            printf("\nNo se pueden crear mas clientes");
+        }
     }
 
     return (EXIT_SUCCESS);
@@ -90,6 +101,8 @@ void *clientHandler(void *socket_desc)
     char *message , client_message[2000];
     int i;
     char str[20];
+    char a;
+    int ia;
      
     i=0;
     //Send some messages to the client
@@ -101,20 +114,33 @@ void *clientHandler(void *socket_desc)
     {
         //end of string marker
         client_message[read_size] = '\0';
-
+        
+        
         //Send the message back to client
-        sprintf(str,"Mensaje numero: %d\n",i);                
-
-        write(sock , str , 20);
+        a=client_message[0];
+        if(a!='q'){
+            ia = a - '0';
+            if(ia<conexiones){
+                sprintf(str, "Soy el cliente %d", ClientConected[ia]->idArreglo);
+            }else{
+                sprintf(str,"Invalido cod:%d",-1);
+            }
+            write(sock , str , 20);
+        }else{
+            break;
+        }
+        
         //clear the message buffer
         memset(client_message, 0, 2000);
         i++;
     }
-     
+    read_size=0;
     if(read_size == 0)
-    {
-        printf("Client disconnected");
+    {        
+        printf("\nClient disconnected");
         fflush(stdout);
+        close(sock);
+        conexiones--;
     }
     else if(read_size == -1)
     {
