@@ -14,9 +14,12 @@ extern "C" {
     
 typedef struct ClientIRC{
     int idArreglo;
+    char *msj;
 }ClientIRC;
 
 ClientIRC *newClientIRC(int id);
+const char *info();
+const char *timee();
 
 #ifdef	__cplusplus
 }
