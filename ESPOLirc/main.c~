@@ -17,18 +17,13 @@
 
 #include <string.h>
 #include <pthread.h>
-#include <semaphore.h>
 
 #include "ClientIRC.h"
-#include "Lista.h"
-#include "CanalIRC.h"
-#include "ServerIRC.h"
 
 /*
 Tutoriales
 http://www.tutorialspoint.com/unix_sockets/socket_server_example.htm
  */
-
 typedef struct Params {
     int sock;
     ClientIRC *cl;
@@ -36,31 +31,11 @@ typedef struct Params {
 
 void *clientHandlerProducer(void *);
 int splitMessage(char *argumentos[5], char message[2000]);
-int splitMessage2(char *argumentos[5], char message[2000]);
-void *consumer(void *);
-/*
 
-void *producer(void *);
- */
-
-int stock_count = 0;
-const int stock_max_limit = 5;
 
 ClientIRC *ClientConected[10];
 int conexiones;
-int lock;
-/*Listas: Canales, clientes, mensajes*/
-ServerIRC *servidor;
-Lista *canales;
-Lista *clientes;
-Lista *mensajes;
-
-int client_sock;
-
-pthread_t HiloServ, HiloServ2;
-sem_t semP, semC;
-
-sem_t *mutex, *mut, *full, *empty;
+pthread_t threads[10];
 
 int main(int argc, char** argv) {
 
@@ -71,11 +46,7 @@ int main(int argc, char** argv) {
     lock = 0;
 
 
-    sem_init(&mutex, 0, 1);
-    sem_init(&mut, 0, 1);
-    sem_init(&full, 0, 1);
-    sem_init(&empty, 0, 1);
-    //Crear ListaHilos
+        //Crear ListaHilos
     servidor = StartServer();
 
     //Start Channels
@@ -118,19 +89,14 @@ int main(int argc, char** argv) {
     /*Control Print*/
     printf("\nListen: %d", rc);
 
-    // printf("\nOli mundo =) !");
-    sem_init(&semP, 0, 0);
-    sem_init(&semC, 0, 0);
+    
 
     pthread_create(&HiloServ, NULL, consumer, NULL);
     //pthread_create(&HiloServ2, NULL, producer, NULL);
     //pthread_join(HiloServ, NULL);
     //pthread_join(HiloServ2, NULL);
 
-    sem_destroy(&semC);
-    sem_destroy(&semP);
-
-
+    
     c = sizeof (struct sockaddr_in);
     do {
         fflush(stdin);
@@ -179,7 +145,7 @@ int main(int argc, char** argv) {
                 return (EXIT_FAILURE);
             }
         }
-        sem_post(&mutex);
+        
     } while (1);
 
     return (EXIT_SUCCESS);
@@ -301,107 +267,4 @@ int splitMessage(char *argumentos[5], char message[2000]) {
     return nArgs;
 }
 
-int splitMessage2(char *argumentos[5], char message[2000]) {
-    int nArgs;
-    nArgs = 0;
-    if (message[0] != '\0' && message[0] != ' ') {
-        argumentos[nArgs] = strtok(message, " ");
-        do {
-            nArgs++;
-            argumentos[nArgs] = strtok(NULL, " ");
-        } while (argumentos[nArgs] != NULL && nArgs < 3);
-        nArgs++;
-        argumentos[nArgs] = strtok(NULL, "\0");
-    }
-    return nArgs;
-}
-
-/*
-void *producer(void *arg) {
-    int i, sum=0;
-    for (i = 0; i < 10; i++) {
-
-        while(stock_max_limit == stock_count){
-            printf("stock overflow, production on wait..\n");
-            sem_wait(&semC);
-            printf("production operation continues..\n");
-        }
-
-        sleep(1);   //production decided here
-        stock_count++;
-        printf("P::stock-count : %d\n",stock_count);
-        sem_post(&semP);
-        printf("P::post signal..\n");
-    }
- }
- */
-
-void *consumer(void *arg) {
-    int i, sum = 0;
-    Mensaje *men;
-
-    do {
-        fflush(stdin);
-        fflush(stdout);
-        sem_wait(&full);
-        sem_wait(&mut);
-        if (ListaSize(mensajes) > 0) {
-            char *argumentos[5];
-            char mens[2000];
-            argumentos[0] = NULL;
-            argumentos[1] = NULL;
-            argumentos[2] = NULL;
-            argumentos[3] = NULL;
-            argumentos[4] = NULL;
-            int nArg;
-            men = ListaRemoveFirst(mensajes);
-            strcpy(mens, men->mensaje);
-            nArg = splitMessage(argumentos, men->mensaje);
-            if (strlen(men->cSend->nickname) != 0) {
-                if (nArg > 0 && argumentos[0] != NULL) {
-                    if (strcmp(argumentos[0], "QUIT") == 0) {
-                        quit(argumentos, men->cSend, servidor);
-                    } else if (strcmp(argumentos[0], "INFO") == 0) {
-                        write(men->cSend->socket, info(servidor, argumentos[1]), strlen(info(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "TIME") == 0) {
-                        write(men->cSend->socket, timee(servidor, argumentos[1]), strlen(timee(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "VERSION") == 0) {
-                        write(men->cSend->socket, version(servidor, argumentos[1]), strlen(version(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "MODT") == 0) {
-                        write(men->cSend->socket, motd(servidor, argumentos[1]), strlen(motd(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "LIST") == 0) {
-                        list(servidor, argumentos, men->cSend);
-                    } else if (strcmp(argumentos[0], "USER") == 0) {
-                        char *argumentos2[5];
-                        argumentos2[0] = NULL;
-                        argumentos2[1] = NULL;
-                        argumentos2[2] = NULL;
-                        argumentos2[3] = NULL;
-                        argumentos2[4] = NULL;
-                        splitMessage2(argumentos2, mens);
-                        user(servidor, argumentos2, men->cSend);
-                    }
-                }
-            } else if (nArg > 0) {
-                if (strcmp(argumentos[0], "QUIT") != 0 || strcmp(argumentos[0], "USER") != 0) {
-                    //write(men->cSend->socket, "Utilizar Comando USER para identificarse\n", 41);
-                }
-                if (strcmp(argumentos[0], "QUIT") == 0) {
-                    quit(argumentos, men->cSend, servidor);
-                } else if (strcmp(argumentos[0], "USER") == 0) {
-                    char *argumentos2[5];
-                    argumentos2[0] = NULL;
-                    argumentos2[1] = NULL;
-                    argumentos2[2] = NULL;
-                    argumentos2[3] = NULL;
-                    argumentos2[4] = NULL;
-                    splitMessage2(argumentos2, mens);
-                    user(servidor, argumentos2, men->cSend);
-                }
-            }
-        }
-        sem_post(&mut);
-        sem_post(&empty);
-    } while (1);
-}
 
