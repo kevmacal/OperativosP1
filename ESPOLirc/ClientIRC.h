@@ -8,18 +8,35 @@
 #ifndef CLIENTIRC_H
 #define	CLIENTIRC_H
 
+
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
     
+typedef struct Mensaje{
+    struct ClientIRC *cSend;
+    char mensaje[2000];
+}Mensaje;
+    
+    
 typedef struct ClientIRC{
-    int idArreglo;
-    char *msj;
+    int idLista;
+    int socket;
+    char nickname[9]; //debe ser de nueve caracteres
+    char realName[100];
+    char hostName[50];
 }ClientIRC;
 
-ClientIRC *newClientIRC(int id);
-const char *info();
-const char *timee();
+/*Mensaje*/
+Mensaje *MensajeNew(ClientIRC *cS,char mensaje[2000]);
+
+
+ClientIRC *newClientIRC(int id,int sock);
+int ClientIRCxId(ClientIRC *c1,ClientIRC *c2);
+int ClientIRCxSock(ClientIRC *c1,ClientIRC *c2);
+int ClientIRCxUser(ClientIRC *c1,ClientIRC *c2);
+
 
 #ifdef	__cplusplus
 }

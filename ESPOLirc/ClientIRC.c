@@ -16,43 +16,37 @@
 
 #include "ClientIRC.h"
 
-ClientIRC *newClientIRC(int id) {
-    ClientIRC *nuevo = malloc(sizeof (ClientIRC));
-    nuevo->idArreglo = id;
-    //nuevo->msj = "";
+
+Mensaje *MensajeNew(ClientIRC *cS,char mensaje[2000]){
+    Mensaje *nuevo=malloc(sizeof(Mensaje));
+    nuevo->cSend=cS;
+    strcpy(nuevo->mensaje,mensaje);
     return nuevo;
 }
 
-//http://stackoverflow.com/questions/3381080/reading-all-content-from-a-text-file-c
-//falta lo del patch, lo del target server y el argumento
 
-const char *info() {
 
-    char *fcontent = NULL;
-    int fsize = 0;
-    FILE *fp;
-
-    fp = fopen("/etc/lsb-release", "r");
-    if (fp) {
-        fseek(fp, 0, SEEK_END);
-        fsize = ftell(fp);
-        rewind(fp);
-
-        fcontent = (char*) malloc(sizeof (char) * fsize);
-        fread(fcontent, 1, fsize, fp);
-
-        fclose(fp);
-    }
-    return fcontent;
+ClientIRC *newClientIRC(int id,int sock) {
+    ClientIRC *nuevo = malloc(sizeof (ClientIRC));
+    nuevo->idLista = id;
+    nuevo->socket=sock;
+    return nuevo;
 }
 
-const char *timee(){
+int ClientIRCxId(ClientIRC *c1,ClientIRC *c2){
+    if(c1->idLista==c2->idLista){
+        return 0;
+    }
+    return -1;
+}
 
-    time_t t;
-    char* ct;
+int ClientIRCxSock(ClientIRC *c1,ClientIRC *c2){
+    if(c1->socket==c2->socket){
+        return 0;
+    }
+    return -1;
+}
 
-    t = time(NULL);
-    ct = ctime(&t);
-  
-    return ct;
+int ClientIRCxUser(ClientIRC *c1,ClientIRC *c2){
+   return strcmp(c1->nickname,c2->nickname); 
 }
