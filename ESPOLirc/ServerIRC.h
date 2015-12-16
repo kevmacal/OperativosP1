@@ -8,6 +8,8 @@
 #define	SERVERIRC_H
 
 #include "Lista.h"
+#include "ClientIRC.h"
+#include "CanalIRC.h"
 
 
 #ifdef	__cplusplus
@@ -42,6 +44,8 @@ void list(ServerIRC *servidor,char *argumentos[5],ClientIRC *cl);
 void user(ServerIRC *server, char *argumentos[5],ClientIRC *cl);
 void users(ServerIRC *servidor, char *argumentos[5],ClientIRC *cl);
 void setname(ServerIRC *server, char *argumentos[5], ClientIRC *cl);
+void join(ServerIRC *server, char *argumentos[5],ClientIRC *cl);
+void part(ServerIRC *server, char *argumentos[5], ClientIRC *cl);
 
 #ifdef	__cplusplus
 }

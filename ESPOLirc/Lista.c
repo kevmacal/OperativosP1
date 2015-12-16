@@ -109,3 +109,12 @@ void *ListaRemove(Lista *lista, void *comparador, int (*fn)(void*, void*)){
     }
     return NULL;
 }
+
+void ListaReplaceAll(Lista *lista, void *comparador, int (*fn)(void*, void*)){
+    Nodo *it;    
+    for(it=lista->header;it!=NULL;it=it->next){
+        if(fn(it->cliente,comparador)==0){
+            it->cliente=comparador;
+        }
+    }
+}

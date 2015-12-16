@@ -8,8 +8,6 @@
 #ifndef LISTA_H
 #define	LISTA_H
 
-#include "ClientIRC.h"
-
 
 #ifdef	__cplusplus
 extern "C" {
@@ -37,6 +35,7 @@ void *ListaGet(Lista *lista, void *comparador, int (*fn)(void*, void*));
 void *ListaRemoveFirst(Lista *lista);
 void *ListaRemoveLast(Lista *lista);
 void *ListaRemove(Lista *lista, void *comparador, int (*fn)(void*, void*));
+void ListaReplaceAll(Lista *lista, void *comparador, int (*fn)(void*, void*));
 
 #ifdef	__cplusplus
 }

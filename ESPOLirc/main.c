@@ -36,7 +36,7 @@ typedef struct Params {
 
 void *clientHandlerProducer(void *);
 int splitMessage(char *argumentos[5], char message[2000]);
-int splitMessage2(char *argumentos[5], char message[2000]);
+int splitMessage2(char *argumentos[5], char message[2000], int Argus);
 void *consumer(void *);
 /*
 
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
         sem_wait(&mutex);
         if (client_sock = accept(server_sockfd, (struct sockaddr *) &client_address, (socklen_t*) & c)) {
             conexiones++;
-            printf("\nConnection %d--%d", conexiones, client_sock);
+            //printf("\nConnection %d--%d", conexiones, server_sockfd+conexiones);
             /*
             if (conexiones > 3) {
                 Nodo *nTmp,*nTmp2;
@@ -165,8 +165,8 @@ int main(int argc, char** argv) {
             CTmp = (CanalIRC *) ListaGet(canales, CanalIRCNew("#Conectado", "Clientes"), (void*) CanalCmpxNombre);
             Params *pTmp = malloc(sizeof (Params));
             if (CTmp != NULL) {
-                ClientIRC *nuevoIRC = newClientIRC(conexiones, conexiones + server_sockfd);
-                printf("\n%s--%d--%d", CTmp->nombre, nuevoIRC->idLista, nuevoIRC->socket);
+                ClientIRC *nuevoIRC = newClientIRC(conexiones, client_sock);
+                printf("\n%s--%d--%d", servidor->nombre, nuevoIRC->idLista, nuevoIRC->socket);
                 ListaAdd(CTmp->clientes, NodoNew(nuevoIRC));
                 ListaAdd(clientes, NodoNew(nuevoIRC));
                 pTmp->cl = nuevoIRC;
@@ -200,12 +200,16 @@ void *clientHandlerProducer(void *socket_desc) {
     int ia;
     int contArg; //Maximo 5
     char *argumentos[5];
-    i = 0;
+    
 
-    write(sock, "Utilizar Comando USER para identificarse\n", 41);
+    write(sock, "Utilizar Comando /USER para identificarse\n", 42);
     //Receive a message from client
     do {
-        //irc = ListaGet(clientes, param->cl, ClientIRCxId);
+        i = 1;
+        irc = ListaGet(clientes, param->cl, ClientIRCxId);
+        if(irc->isConectado==0&&strlen(irc->nickname)!=0){
+            i=0;
+        }
         if ((read_size = recv(sock, client_message, 2000, 0)) > 0) {
             sem_wait(&empty);
             sem_wait(&mut);
@@ -214,9 +218,14 @@ void *clientHandlerProducer(void *socket_desc) {
             client_message[read_size - 2] = '\0';
             client_message[read_size - 1] = '\0';
             client_message[read_size] = '\0';
-            irc = ListaGet(clientes, param->cl, ClientIRCxId);
-            printf("\nCliente%d-%d", irc->idLista, irc->socket);
-            ListaAdd(mensajes, NodoNew(MensajeNew(irc, client_message)));
+            //irc = ListaGet(clientes, param->cl, ClientIRCxId);
+            //printf("\nCliente%d-%d", irc->idLista, irc->socket);
+            if (strlen(irc->nickname)!=0||(irc->isConectado==0&&strlen(irc->nickname)==0)) {
+                ListaAdd(mensajes, NodoNew(MensajeNew(irc, client_message)));
+            } else {
+                client_message[0]='\0';
+                ListaAdd(mensajes, NodoNew(MensajeNew(irc, client_message)));
+            }
 
             //write(sock,client_message,strlen(client_message));
             //contArg=splitMessage(argumentos,client_message);
@@ -301,15 +310,16 @@ int splitMessage(char *argumentos[5], char message[2000]) {
     return nArgs;
 }
 
-int splitMessage2(char *argumentos[5], char message[2000]) {
+/*Con argus se indica cuantos son sin comillas*/
+int splitMessage2(char *argumentos[5], char message[2000], int Argus) {
     int nArgs;
     nArgs = 0;
     if (message[0] != '\0' && message[0] != ' ') {
         argumentos[nArgs] = strtok(message, " ");
-        do {
+        while (nArgs < Argus && argumentos[nArgs] != NULL) {
             nArgs++;
             argumentos[nArgs] = strtok(NULL, " ");
-        } while (argumentos[nArgs] != NULL && nArgs < 3);
+        }
         nArgs++;
         argumentos[nArgs] = strtok(NULL, "\0");
     }
@@ -359,30 +369,37 @@ void *consumer(void *arg) {
             nArg = splitMessage(argumentos, men->mensaje);
             if (strlen(men->cSend->nickname) != 0) {
                 if (nArg > 0 && argumentos[0] != NULL) {
-                    if (strcmp(argumentos[0], "QUIT") == 0) {
-                        quit(argumentos, men->cSend, servidor);
-                    } else if (strcmp(argumentos[0], "INFO") == 0) {
-                        write(men->cSend->socket, info(servidor, argumentos[1]), strlen(info(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "TIME") == 0) {
-                        write(men->cSend->socket, timee(servidor, argumentos[1]), strlen(timee(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "VERSION") == 0) {
-                        write(men->cSend->socket, version(servidor, argumentos[1]), strlen(version(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "MODT") == 0) {
-                        write(men->cSend->socket, motd(servidor, argumentos[1]), strlen(motd(servidor, argumentos[1])));
-                    } else if (strcmp(argumentos[0], "LIST") == 0) {
-                        list(servidor, argumentos, men->cSend);
-                    } else if (strcmp(argumentos[0], "USER") == 0) {
+                    if (strcmp(argumentos[0], "/QUIT") == 0) {
                         char *argumentos2[5];
                         argumentos2[0] = NULL;
                         argumentos2[1] = NULL;
                         argumentos2[2] = NULL;
                         argumentos2[3] = NULL;
                         argumentos2[4] = NULL;
-                        splitMessage2(argumentos2, mens);
+                        splitMessage2(argumentos2, mens, 0);
+                        quit(argumentos2, men->cSend, servidor);
+                    } else if (strcmp(argumentos[0], "/INFO") == 0) {
+                        write(men->cSend->socket, info(servidor, argumentos[1]), strlen(info(servidor, argumentos[1])));
+                    } else if (strcmp(argumentos[0], "/TIME") == 0) {
+                        write(men->cSend->socket, timee(servidor, argumentos[1]), strlen(timee(servidor, argumentos[1])));
+                    } else if (strcmp(argumentos[0], "/VERSION") == 0) {
+                        write(men->cSend->socket, version(servidor, argumentos[1]), strlen(version(servidor, argumentos[1])));
+                    } else if (strcmp(argumentos[0], "/MODT") == 0) {
+                        write(men->cSend->socket, motd(servidor, argumentos[1]), strlen(motd(servidor, argumentos[1])));
+                    } else if (strcmp(argumentos[0], "/LIST") == 0) {
+                        list(servidor, argumentos, men->cSend);
+                    } else if (strcmp(argumentos[0], "/USER") == 0) {
+                        char *argumentos2[5];
+                        argumentos2[0] = NULL;
+                        argumentos2[1] = NULL;
+                        argumentos2[2] = NULL;
+                        argumentos2[3] = NULL;
+                        argumentos2[4] = NULL;
+                        splitMessage2(argumentos2, mens, 3);
                         user(servidor, argumentos2, men->cSend);
- 					} else if (strcmp(argumentos[0], "USERS") == 0) {
+                    } else if (strcmp(argumentos[0], "/USERS") == 0) {
                         users(servidor, argumentos, men->cSend);
-					 } else if (strcmp(argumentos[0], "SETNAME") == 0) {
+                    } else if (strcmp(argumentos[0], "/SETNAME") == 0) {
                         if (nArg > 1) {
                             char *argumentos2[5];
                             argumentos2[0] = NULL;
@@ -414,6 +431,24 @@ void *consumer(void *arg) {
                         } else {
                             write(men->cSend, "ERR_NEEDMOREPARAMS\n", 19);
                         }
+                    } else if (strcmp(argumentos[0], "/JOIN") == 0) {
+                        join(servidor, argumentos, men->cSend);
+                    } else if (strcmp(argumentos[0], "/PART") == 0) {
+                        if (nArg > 2) {
+                            char *argumentos2[5];
+                            argumentos2[0] = NULL;
+                            argumentos2[1] = NULL;
+                            argumentos2[2] = NULL;
+                            argumentos2[3] = NULL;
+                            argumentos2[4] = NULL;
+                            splitMessage2(argumentos2, mens, 1);
+                            part(servidor, argumentos2, men->cSend);
+                        } else {
+                            write(men->cSend->socket, "SYNTAX ERROR\n", 13);
+                        }
+                    } else if (strcmp(argumentos[0], "/NAMES") == 0) {
+                        names(servidor, argumentos, men->cSend);
+                    }
                 }
             } else if (nArg > 0) {
                 if (strcmp(argumentos[0], "/QUIT") != 0 && strcmp(argumentos[0], "/USER") != 0) {
@@ -435,7 +470,7 @@ void *consumer(void *arg) {
                     argumentos2[2] = NULL;
                     argumentos2[3] = NULL;
                     argumentos2[4] = NULL;
-                    splitMessage2(argumentos2, mens);
+                    splitMessage2(argumentos2, mens, 3);
                     user(servidor, argumentos2, men->cSend);
                 }
             }

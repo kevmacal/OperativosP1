@@ -29,9 +29,26 @@ Mensaje *MensajeNew(ClientIRC *cS,char mensaje[2000]){
 
 ClientIRC *newClientIRC(int id,int sock) {
     ClientIRC *nuevo = malloc(sizeof (ClientIRC));
+    nuevo->isConectado=0;
     nuevo->idLista = id;
     nuevo->socket=sock;
     return nuevo;
+}
+
+int ClienteIRCVerificarConexion(Lista *usuarios,ClientIRC *cl){
+    ClientIRC *cTmp;
+    Nodo *nTmp;;
+    for(nTmp=usuarios->header;nTmp!=NULL;nTmp=nTmp->next){
+        cTmp=nTmp->cliente;
+        if(strcmp(cTmp->nickname,cl->nickname)==0&&cTmp->isConectado==1){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void ClientIRCConectar(ClientIRC *cl, int valor){
+    cl->isConectado=valor;
 }
 
 int ClientIRCxId(ClientIRC *c1,ClientIRC *c2){
@@ -51,6 +68,14 @@ int ClientIRCxSock(ClientIRC *c1,ClientIRC *c2){
 int ClientIRCxUser(ClientIRC *c1,ClientIRC *c2){
    return strcmp(c1->nickname,c2->nickname); 
 }
+
+int ClientIRCxUserConnected(ClientIRC *c1,ClientIRC *c2){
+    if(c1->isConectado==0){
+        return -1;
+    }
+    return strcmp(c1->nickname,c2->nickname);
+}
+
 ClientIRC *ClientIRCResetUsername(ClientIRC *cl){
     int i;
     for(i=0;i<9;i++){
