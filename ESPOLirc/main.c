@@ -401,7 +401,19 @@ void *consumer(void *arg) {
                         } else {
                             write(men->cSend, "ERR_NONICKNAMEGIVEN\n", 20);
                         }
-                    
+                    } else if (strcmp(argumentos[0], "/PRIVMSG") == 0) {
+                        if (nArg > 2) {
+                            char *argumentos2[5];
+                            argumentos2[0] = NULL;
+                            argumentos2[1] = NULL;
+                            argumentos2[2] = NULL;
+                            argumentos2[3] = NULL;
+                            argumentos2[4] = NULL;
+                            splitMessage2(argumentos2, mens, 1);
+                            privmsg(servidor, argumentos2, men->cSend);
+                        } else {
+                            write(men->cSend, "ERR_NEEDMOREPARAMS\n", 19);
+                        }
                 }
             } else if (nArg > 0) {
                 if (strcmp(argumentos[0], "/QUIT") != 0 && strcmp(argumentos[0], "/USER") != 0) {

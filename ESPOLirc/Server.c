@@ -431,7 +431,38 @@ void nick(ServerIRC *server, char *argumentos[5], ClientIRC *cl) {
         }
     }
 }
-        a=argumentos[4][0];
-        b=argumentos[4][strlen(argumentos[4])-1];
+void privmsg(ServerIRC *server, char *argumentos[5], ClientIRC *cl) {
+    char a;
+    CanalIRC *cTmp;
+    Nodo *nTmp, *nTmp2;
+    ClientIRC *clTmp;
+    a = argumentos[1][0];
+   
+        cTmp = ListaGet(server->canales, CanalIRCNew(argumentos[1], ":*"), (void *) CanalCmpxNombre);
+        if (cTmp != NULL && argumentos[2][0] == '\"' && argumentos[2][strlen(argumentos[2]) - 1] == '\"') {
+            for (nTmp = cTmp->clientes->header; nTmp != NULL; nTmp = nTmp->next) {
+                clTmp = nTmp->cliente;
+                if (clTmp != cl && clTmp->isConectado == 1) {
+                    char cad[2000];
+                    limpiarCadena(cad);
+                    strcat(cad, cl->nickname);
+                    strcat(cad, ":");
+                    argumentos[2][0] = ' ';
+                    argumentos[2][strlen(argumentos[2]) - 1] = ' ';
+                    strcat(cad, argumentos[2]);
+                    strcat(cad, "\n");
+                    write(clTmp->socket, cad, strlen(cad));
+                }
+            }
+        } else {
+            if (cTmp == NULL) {
+                write(cl->socket, "ERR_CANNOTSENDTOCHAN\n", 21);
+            } else {
+                write(cl->socket, "SYNTAX ERROR\n", 13);
+            }
+        }
+   
+}
+
     }
 }
