@@ -15,6 +15,8 @@
 #include <time.h>
 
 #include "ServerIRC.h"
+#include "Lista.h"
+#include "ClientIRC.h"
 #include "CanalIRC.h"
 
 //http://stackoverflow.com/questions/3381080/reading-all-content-from-a-text-file-c
@@ -32,6 +34,13 @@ int TestAndSet(int *lock) {
     int tmp = *lock;
     *lock = 1;
     return tmp;
+}
+
+void limpiarCadena(char cadena[2000]) {
+    int i;
+    for (i = 0; i < 2000; i++) {
+        cadena[i] = '\0';
+    }
 }
 
 Hilo *HiloNew(int id) {
@@ -319,6 +328,109 @@ void user(ServerIRC *server, char *argumentos[5],ClientIRC *cl){
         }
     }else{
         write(cl->socket, "SYNTAX ERROR\n", 13);
+void users(ServerIRC *servidor, char *argumentos[5], ClientIRC *cl) {
+    Nodo *it;
+    ClientIRC *cc;
+    if (argumentos[1] != NULL) {
+        if (strcmp(argumentos[1], servidor->nombre) == 0) {
+            for (it = servidor->clientes->header; it != NULL; it = it->next) {
+                char cad[2000];
+                limpiarCadena(cad);
+                cc = it->cliente;
+                if (cc->isConectado) {
+                    strcat(cad, ":");
+                    strcat(cad, servidor->nombre);
+                    strcat(cad, " ");
+                    strcat(cad, cc->nickname);
+                    strcat(cad, " - ");
+                    strcat(cad, cc->realName);
+                    strcat(cad, "\n");
+                    write(cl->socket, cad, strlen(cad));
+                }
+            }
+        } else {
+            write(cl->socket, "ERR_NOSUCHSERVER\n", 17);
+        }
+    } else {
+        for (it = servidor->clientes->header; it != NULL; it = it->next) {
+            char cad[2000];
+            limpiarCadena(cad);
+            cc = it->cliente;
+            if (cc->isConectado == 1) {
+                strcat(cad, ":");
+                strcat(cad, servidor->nombre);
+                strcat(cad, " ");
+                strcat(cad, cc->nickname);
+                strcat(cad, " - ");
+                strcat(cad, cc->realName);
+                strcat(cad, "\n");
+                write(cl->socket, cad, strlen(cad));
+            }
+        }
+    }
+}
+
+void setname(ServerIRC *server, char *argumentos[5], ClientIRC *cl) {
+    if (argumentos[0] == NULL || argumentos[1] == NULL) {
+        write(cl->socket, "ERR_NEEDMOREPARAMS\n", 19);
+    } else if (argumentos[1][0] == '\"' && argumentos[1][strlen(argumentos[1]) - 1] == '\"') {
+        char cad[2000];
+        limpiarCadena(cad);
+        argumentos[1][0] = ' ';
+        argumentos[1][strlen(argumentos[1]) - 1] = ' ';
+        strcpy(cl->realName, argumentos[1]);
+        strcat(cad, ":");
+        strcat(cad, server->nombre);
+        strcat(cad, " REALNAME ");
+        strcat(cad, cl->realName);
+        strcat(cad, "\n");
+        write(cl->socket, cad, strlen(cad));
+    } else {
+        write(cl->socket, "SYNTAX ERROR\n", 13);
+    }
+}
+
+void nick(ServerIRC *server, char *argumentos[5], ClientIRC *cl) {
+    ClientIRC *cTmp;
+    cTmp = newClientIRC(1, 1);
+    strcpy(cTmp->nickname, argumentos[1]);
+    cTmp = ListaGet(server->clientes, cTmp, (void *) ClientIRCxUser);
+    if (cTmp == NULL) {
+        char cad[2000];
+        limpiarCadena(cad);
+        if (strlen(argumentos[1]) < 10) {
+            ClientIRCResetUsername(cl);
+            strcpy(cl->nickname, argumentos[1]);
+            strcat(cad, ":");
+            strcat(cad, server->nombre);
+            strcat(cad, " NICK ");
+            strcat(cad, cl->nickname);
+            strcat(cad, "\n");
+            write(cl->socket, cad, strlen(cad));
+        } else {
+            write(cl->socket, "ERR_ERRONEUSNICKNAME\n", 21);
+        }
+    } else {
+        if (cTmp->isConectado == 0) {
+            char cad[2000];
+            limpiarCadena(cad);
+            if (strlen(argumentos[1]) < 10) {
+                ClientIRCResetUsername(cl);
+                strcpy(cl->nickname, argumentos[1]);
+                strcat(cad, ":");
+                strcat(cad, server->nombre);
+                strcat(cad, " NICK ");
+                strcat(cad, cl->nickname);
+                strcat(cad, "\n");
+                write(cl->socket, cad, strlen(cad));
+            } else {
+                write(cl->socket, "ERR_ERRONEUSNICKNAME\n", 21);
+            }
+        } else {
+            write(cl->socket, "SYNTAX ERROR\n", 13);
+        }
+    }
+}
         a=argumentos[4][0];
         b=argumentos[4][strlen(argumentos[4])-1];
     }

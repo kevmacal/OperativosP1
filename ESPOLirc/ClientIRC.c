@@ -15,6 +15,7 @@
 #include <time.h>
 
 #include "ClientIRC.h"
+#include "Lista.h"
 
 
 Mensaje *MensajeNew(ClientIRC *cS,char mensaje[2000]){
@@ -49,4 +50,10 @@ int ClientIRCxSock(ClientIRC *c1,ClientIRC *c2){
 
 int ClientIRCxUser(ClientIRC *c1,ClientIRC *c2){
    return strcmp(c1->nickname,c2->nickname); 
+}
+ClientIRC *ClientIRCResetUsername(ClientIRC *cl){
+    int i;
+    for(i=0;i<9;i++){
+        cl->nickname[i]='\0';
+    }
 }

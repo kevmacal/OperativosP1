@@ -36,6 +36,7 @@ ClientIRC *newClientIRC(int id,int sock);
 int ClientIRCxId(ClientIRC *c1,ClientIRC *c2);
 int ClientIRCxSock(ClientIRC *c1,ClientIRC *c2);
 int ClientIRCxUser(ClientIRC *c1,ClientIRC *c2);
+ClientIRC *ClientIRCResetUsername(ClientIRC *cl);
 
 
 #ifdef	__cplusplus

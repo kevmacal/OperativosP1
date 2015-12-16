@@ -380,15 +380,43 @@ void *consumer(void *arg) {
                         argumentos2[4] = NULL;
                         splitMessage2(argumentos2, mens);
                         user(servidor, argumentos2, men->cSend);
-                    }
+ 					} else if (strcmp(argumentos[0], "USERS") == 0) {
+                        users(servidor, argumentos, men->cSend);
+					 } else if (strcmp(argumentos[0], "SETNAME") == 0) {
+                        if (nArg > 1) {
+                            char *argumentos2[5];
+                            argumentos2[0] = NULL;
+                            argumentos2[1] = NULL;
+                            argumentos2[2] = NULL;
+                            argumentos2[3] = NULL;
+                            argumentos2[4] = NULL;
+                            splitMessage2(argumentos2, mens, 0);
+                            setname(servidor, argumentos2, men->cSend);
+                        } else {
+                            write(men->cSend, "ERR_NEEDMOREPARAMS\n", 19);
+                        }
+                    } else if (strcmp(argumentos[0], "/NICK") == 0) {
+                        if (nArg == 2) {
+                            nick(servidor, argumentos, men->cSend);
+                        } else {
+                            write(men->cSend, "ERR_NONICKNAMEGIVEN\n", 20);
+                        }
+                    
                 }
             } else if (nArg > 0) {
-                if (strcmp(argumentos[0], "QUIT") != 0 || strcmp(argumentos[0], "USER") != 0) {
-                    //write(men->cSend->socket, "Utilizar Comando USER para identificarse\n", 41);
+                if (strcmp(argumentos[0], "/QUIT") != 0 && strcmp(argumentos[0], "/USER") != 0) {
+                    write(men->cSend->socket, "Utilizar Comando /USER para identificarse\n", 42);
                 }
-                if (strcmp(argumentos[0], "QUIT") == 0) {
-                    quit(argumentos, men->cSend, servidor);
-                } else if (strcmp(argumentos[0], "USER") == 0) {
+                if (strcmp(argumentos[0], "/QUIT") == 0) {
+                    char *argumentos2[5];
+                    argumentos2[0] = NULL;
+                    argumentos2[1] = NULL;
+                    argumentos2[2] = NULL;
+                    argumentos2[3] = NULL;
+                    argumentos2[4] = NULL;
+                    splitMessage2(argumentos2, mens, 0);
+                    quit(argumentos2, men->cSend, servidor);
+                } else if (strcmp(argumentos[0], "/USER") == 0) {
                     char *argumentos2[5];
                     argumentos2[0] = NULL;
                     argumentos2[1] = NULL;

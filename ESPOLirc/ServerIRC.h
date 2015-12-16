@@ -31,6 +31,7 @@ int HiloxId(Hilo *h1,Hilo *h2);
 
 ServerIRC *StartServer();
 int TestAndSet(int *lock);
+void limpiarCadena(char cadena[2000]);
 
 const char *info(ServerIRC *servidor,char target[50]) ; 
 const char *timee(ServerIRC *servidor, char target[50]);
@@ -39,6 +40,8 @@ void quit(char *argumentos[5],ClientIRC *cl,ServerIRC *server);
 const char *motd(ServerIRC *servidor, char target[50]);
 void list(ServerIRC *servidor,char *argumentos[5],ClientIRC *cl);
 void user(ServerIRC *server, char *argumentos[5],ClientIRC *cl);
+void users(ServerIRC *servidor, char *argumentos[5],ClientIRC *cl);
+void setname(ServerIRC *server, char *argumentos[5], ClientIRC *cl);
 
 #ifdef	__cplusplus
 }
